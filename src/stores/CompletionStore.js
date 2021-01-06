@@ -2,7 +2,6 @@ import { types, getParent, getEnv, getRoot, destroy, detach, onSnapshot, isAlive
 
 import Constants from "../core/Constants";
 import Hotkey from "../core/Hotkey";
-import NormalizationStore from "./NormalizationStore";
 import RegionStore from "./RegionStore";
 import Registry from "../core/Registry";
 import RelationStore from "./RelationStore";
@@ -61,11 +60,6 @@ const Completion = types
     relationMode: types.optional(types.boolean, false),
     relationStore: types.optional(RelationStore, {
       relations: [],
-    }),
-
-    normalizationMode: types.optional(types.boolean, false),
-    normalizationStore: types.optional(NormalizationStore, {
-      normalizations: [],
     }),
 
     areas: types.map(Area),
@@ -145,10 +139,6 @@ const Completion = types
 
     updatePersonalKey(value) {
       self.pk = value;
-    },
-
-    setNormalizationMode(val) {
-      self.normalizationMode = val;
     },
 
     toggleVisibility(visible) {
@@ -264,10 +254,6 @@ const Completion = types
 
     addRelation(reg) {
       self.relationStore.addRelation(self._relationObj, reg);
-    },
-
-    addNormalization(normalization) {
-      self.normalizationStore.addNormalization();
     },
 
     validate() {
@@ -589,6 +575,7 @@ const Completion = types
     fixBrokenCompletion(json) {
       json.forEach(obj => {
         if (obj.type === "htmllabels") obj.type = "hypertextlabels";
+        if (obj.normalization) obj.meta = { ...obj.meta, text: [obj.normalization] };
       });
       return json;
     },
