@@ -532,9 +532,7 @@ const Completion = types
         value: resultValue,
       };
 
-      const areaId = guidGenerator();
       const areaObj = {
-        id: areaId,
         object,
         // data for Model instance
         ...areaValue,
@@ -545,18 +543,18 @@ const Completion = types
 
       if (object.requiresTimeAxis) {
         const areaTimeline = {
-          id: areaId,
+          id: guidGenerator(),
           timeline: [
             {
               timestamp: object.currentTimestamp,
-              area: areaObj,
+              area: { id: guidGenerator(), ...areaObj },
             },
           ],
         };
-        self.areaTimelines.set(areaId, areaTimeline);
+        self.areaTimelines.put(areaTimeline);
       }
 
-      const area = self.areas.put(areaObj);
+      const area = self.areas.put({ id: guidGenerator(), ...areaObj });
 
       // if (object.requiresTimeAxis)  {
       // result.values = [resultValue];
