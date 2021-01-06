@@ -24,6 +24,7 @@ import { TranscribeAudio } from "../examples/transcribe_audio"; // eslint-disabl
  * Image
  */
 import { ImageBbox } from "../examples/image_bbox"; // eslint-disable-line no-unused-vars
+import { VideoBbox } from "../examples/video_bbox"; // eslint-disable-line no-unused-vars
 import { ImageKeyPoint } from "../examples/image_keypoints"; // eslint-disable-line no-unused-vars
 import { ImageMultilabel } from "../examples/image_multilabel"; // eslint-disable-line no-unused-vars
 import { ImageEllipselabels } from "../examples/image_ellipses"; // eslint-disable-line no-unused-vars
@@ -48,7 +49,8 @@ import { TimeSeries } from "../examples/timeseries"; // eslint-disable-line no-u
  */
 // import { AllTypes } from "../examples/all_types"; // eslint-disable-line no-unused-vars
 
-const data = Taxonomy;
+const data = VideoBbox;
+// const data = ImageBbox;
 
 /**
  * Get current config

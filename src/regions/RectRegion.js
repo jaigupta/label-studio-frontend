@@ -15,6 +15,7 @@ import { LabelOnRect } from "../components/ImageView/LabelOnRegion";
 import { guidGenerator } from "../core/Helpers";
 import { AreaMixin } from "../mixins/AreaMixin";
 import { getBoundingBoxAfterChanges, fixRectToFit } from "../utils/image";
+import { VideoModel } from "../tags/object";
 
 /**
  * Rectangle object for Bounding Box
@@ -25,7 +26,7 @@ const Model = types
     id: types.optional(types.identifier, guidGenerator),
     pid: types.optional(types.string, guidGenerator),
     type: "rectangleregion",
-    object: types.late(() => types.reference(ImageModel)),
+    object: types.late(() => types.reference(types.union(ImageModel, VideoModel))),
 
     x: types.number,
     y: types.number,
@@ -323,5 +324,6 @@ const HtxRectangle = observer(HtxRectangleView);
 
 Registry.addTag("rectangleregion", RectRegionModel, HtxRectangle);
 Registry.addRegionType(RectRegionModel, "image");
+Registry.addRegionType(RectRegionModel, "video");
 
 export { RectRegionModel, HtxRectangle };

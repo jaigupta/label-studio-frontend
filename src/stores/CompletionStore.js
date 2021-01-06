@@ -540,6 +540,11 @@ const Completion = types
         results: [result],
       });
 
+      // if (object.requiresTimeAxis)  {
+      // result.values = [resultValue];
+      // area.values = [areaValue];
+      // }
+
       if (!area.classification) getEnv(self).onEntityCreate(area);
 
       if (self.store.settings.selectAfterCreate) {
