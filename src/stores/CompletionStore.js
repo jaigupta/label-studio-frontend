@@ -16,6 +16,7 @@ import { guidGenerator } from "../core/Helpers";
 import { DataValidator, ValidationError, VALIDATORS } from "../core/DataValidator";
 import { errorBuilder } from "../core/DataValidator/ConfigValidator";
 import Area from "../regions/Area";
+import AreaTimeline from "../regions/AreaTimeline";
 import throttle from "lodash.throttle";
 import { ViewModel } from "../tags/visual";
 
@@ -68,6 +69,7 @@ const Completion = types
     }),
 
     areas: types.map(Area),
+    areaTimelines: types.map(AreaTimeline),
 
     regionStore: types.optional(RegionStore, {
       regions: [],
@@ -530,15 +532,31 @@ const Completion = types
         value: resultValue,
       };
 
-      const area = self.areas.put({
-        id: guidGenerator(),
+      const areaId = guidGenerator();
+      const areaObj = {
+        id: areaId,
         object,
         // data for Model instance
         ...areaValue,
         // for Model detection
         value: areaValue,
         results: [result],
-      });
+      };
+
+      if (object.requiresTimeAxis) {
+        const areaTimeline = {
+          id: areaId,
+          timeline: [
+            {
+              timestamp: object.currentTimestamp,
+              area: areaObj,
+            },
+          ],
+        };
+        self.areaTimelines.set(areaId, areaTimeline);
+      }
+
+      const area = self.areas.put(areaObj);
 
       // if (object.requiresTimeAxis)  {
       // result.values = [resultValue];

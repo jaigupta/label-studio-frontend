@@ -8,6 +8,7 @@ import Hint from "../../../components/Hint/Hint";
 const VideoControls = ({ item, store }) => {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1em" }}>
+      <span style={{ flex: 1 }} />
       <Button
         type="primary"
         onClick={ev => {
