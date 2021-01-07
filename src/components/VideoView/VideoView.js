@@ -238,10 +238,9 @@ export default observer(
 
       const el = ReactDOM.findDOMNode(this);
       this.$vid = el.querySelector("#video-" + this.props.item.name);
-      console.log(this.$vid);
       observe(this.props.item, "currentTimestamp", change => {
-        console.log(change.newValue);
         this.$vid.currentTime = change.newValue.storedValue;
+        this.props.store.completionStore.selected.timeUpdated(this, this.props.item.currentTimestamp);
       });
     }
 

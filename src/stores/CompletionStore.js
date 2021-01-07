@@ -18,6 +18,7 @@ import Area from "../regions/Area";
 import AreaTimeline from "../regions/AreaTimeline";
 import throttle from "lodash.throttle";
 import { ViewModel } from "../tags/visual";
+import { getSnapshotAtTimestamp, translate } from "./translate";
 
 const Completion = types
   .model("Completion", {
@@ -509,6 +510,41 @@ const Completion = types
       Hotkey.setScope("__main__");
     },
 
+    timeUpdated(item, timestamp) {
+      self.areas.forEach((area, id) => {
+        const currentSnapshot = area.serialize().value;
+        const areaTimeline = self.areaTimelines.get(id);
+        const timeline = areaTimeline.timeline;
+        const oldTimestamp = area.timestamp;
+        const [insertPos, existingArea] = getSnapshotAtTimestamp(area.type, timeline, oldTimestamp);
+        const epsilon = 1e-3;
+        if (
+          Math.abs(currentSnapshot.x - existingArea.x) < epsilon &&
+          Math.abs(currentSnapshot.y - existingArea.y) < epsilon &&
+          Math.abs(currentSnapshot.width - existingArea.width) < epsilon &&
+          Math.abs(currentSnapshot.height - existingArea.height) < epsilon &&
+          Math.abs(currentSnapshot.rotation - existingArea.rotation) < epsilon
+        ) {
+          // too close, no need to update.
+        } else {
+          const timestampedArea = { timestamp: oldTimestamp, value: currentSnapshot };
+          if (insertPos > 0 && Math.abs(timeline[insertPos - 1].timestamp - oldTimestamp) < 0.01) {
+            timeline[insertPos - 1] = timestampedArea;
+          } else if (insertPos < timeline.length && Math.abs(timeline[insertPos].timestamp - oldTimestamp) < 0.01) {
+            timeline[insertPos] = timestampedArea;
+          } else {
+            timeline.splice(insertPos, 0, timestampedArea);
+          }
+        }
+
+        const [areaPos, newArea] = getSnapshotAtTimestamp(area.type, timeline, timestamp);
+        const sx = area.width / area.relativeWidth;
+        const sy = area.height / area.relativeHeight;
+        area.setPosition(newArea.x * sx, newArea.y * sy, newArea.width * sx, newArea.height * sy, newArea.rotation);
+        area.timestamp = timestamp;
+      });
+    },
+
     createResult(areaValue, resultValue, control, object) {
       const result = {
         from_name: control.name,
@@ -518,29 +554,30 @@ const Completion = types
         value: resultValue,
       };
 
-      const areaObj = {
+      const areaId = guidGenerator();
+      const area = self.areas.put({
+        id: areaId,
+        timestamp: object.currentTimestamp,
         object,
         // data for Model instance
         ...areaValue,
         // for Model detection
         value: areaValue,
         results: [result],
-      };
+      });
 
       if (object.requiresTimeAxis) {
         const areaTimeline = {
-          id: guidGenerator(),
+          id: areaId,
           timeline: [
             {
               timestamp: object.currentTimestamp,
-              area: { id: guidGenerator(), ...areaObj },
+              value: { ...area.serialize().value },
             },
           ],
         };
         self.areaTimelines.put(areaTimeline);
       }
-
-      const area = self.areas.put({ id: guidGenerator(), ...areaObj });
 
       // if (object.requiresTimeAxis)  {
       // result.values = [resultValue];

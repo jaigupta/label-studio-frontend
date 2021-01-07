@@ -3,7 +3,7 @@ import Area from "./Area";
 
 const TimestampedArea = types.model({
   timestamp: types.number,
-  area: Area,
+  value: types.frozen(),
 });
 
 const AreaTimeline = types.model({

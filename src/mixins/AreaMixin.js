@@ -7,6 +7,7 @@ export const AreaMixin = types
     id: types.optional(types.identifier, guidGenerator),
     results: types.array(Result),
     parentID: types.maybeNull(types.string),
+    timestamp: types.optional(types.number, 0),
   })
   .views(self => ({
     // self id without completion id added to uniquiness across all the tree
