@@ -2,6 +2,26 @@ import { types, getParent, getRoot, getSnapshot } from "mobx-state-tree";
 import { guidGenerator } from "../core/Helpers";
 import Registry from "../core/Registry";
 
+const ResultValue = types.model({
+  timeFrac: types.maybe(types.number),
+  rating: types.maybe(types.number),
+  text: types.maybe(types.union(types.string, types.array(types.string))),
+  choices: types.maybe(types.array(types.string)),
+  // pairwise
+  selected: types.maybe(types.enumeration(["left", "right"])),
+  // @todo all other *labels
+  labels: types.maybe(types.array(types.string)),
+  htmllabels: types.maybe(types.array(types.string)),
+  paragraphlabels: types.maybe(types.array(types.string)),
+  rectanglelabels: types.maybe(types.array(types.string)),
+  keypointlabels: types.maybe(types.array(types.string)),
+  polygonlabels: types.maybe(types.array(types.string)),
+  ellipselabels: types.maybe(types.array(types.string)),
+  brushlabels: types.maybe(types.array(types.string)),
+  timeserieslabels: types.maybe(types.array(types.string)),
+  taxonomy: types.frozen(), // array of arrays of strings
+});
+
 const Result = types
   .model("Result", {
     id: types.optional(types.identifier, guidGenerator),
@@ -50,24 +70,9 @@ const Result = types
       "pairwise",
     ]),
     // @todo much better to have just a value, not a hash with empty fields
-    value: types.model({
-      rating: types.maybe(types.number),
-      text: types.maybe(types.union(types.string, types.array(types.string))),
-      choices: types.maybe(types.array(types.string)),
-      // pairwise
-      selected: types.maybe(types.enumeration(["left", "right"])),
-      // @todo all other *labels
-      labels: types.maybe(types.array(types.string)),
-      htmllabels: types.maybe(types.array(types.string)),
-      paragraphlabels: types.maybe(types.array(types.string)),
-      rectanglelabels: types.maybe(types.array(types.string)),
-      keypointlabels: types.maybe(types.array(types.string)),
-      polygonlabels: types.maybe(types.array(types.string)),
-      ellipselabels: types.maybe(types.array(types.string)),
-      brushlabels: types.maybe(types.array(types.string)),
-      timeserieslabels: types.maybe(types.array(types.string)),
-      taxonomy: types.frozen(), // array of arrays of strings
-    }),
+    value: ResultValue,
+
+    values: types.array(ResultValue),
     // info about object and region
     // meta: types.frozen(),
   })
