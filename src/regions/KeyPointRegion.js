@@ -12,13 +12,14 @@ import { ImageModel } from "../tags/object/Image";
 import { guidGenerator } from "../core/Helpers";
 import { LabelOnKP } from "../components/ImageView/LabelOnRegion";
 import { AreaMixin } from "../mixins/AreaMixin";
+import { VideoModel } from "../tags/object";
 
 const Model = types
   .model({
     id: types.optional(types.identifier, guidGenerator),
     pid: types.optional(types.string, guidGenerator),
     type: "keypointregion",
-    object: types.late(() => types.reference(ImageModel)),
+    object: types.late(() => types.reference(types.union(ImageModel, VideoModel))),
 
     x: types.number,
     y: types.number,
@@ -214,6 +215,11 @@ Registry.addTag("keypointregion", KeyPointRegionModel, HtxKeyPoint);
 Registry.addRegionType(
   KeyPointRegionModel,
   "image",
+  value => "x" in value && "y" in value && "width" in value && !("height" in value),
+);
+Registry.addRegionType(
+  KeyPointRegionModel,
+  "video",
   value => "x" in value && "y" in value && "width" in value && !("height" in value),
 );
 

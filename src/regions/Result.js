@@ -68,7 +68,6 @@ const Result = types
       timeserieslabels: types.maybe(types.array(types.string)),
       taxonomy: types.frozen(), // array of arrays of strings
     }),
-
     // info about object and region
     // meta: types.frozen(),
   })

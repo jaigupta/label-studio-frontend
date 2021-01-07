@@ -18,7 +18,7 @@ import Area from "../regions/Area";
 import AreaTimeline from "../regions/AreaTimeline";
 import throttle from "lodash.throttle";
 import { ViewModel } from "../tags/visual";
-import { getSnapshotAtTimestamp, translate } from "./translate";
+import { getSnapshotAtTimestamp, isClose } from "./translate";
 
 const Completion = types
   .model("Completion", {
@@ -517,16 +517,7 @@ const Completion = types
         const timeline = areaTimeline.timeline;
         const oldTimestamp = area.timestamp;
         const [insertPos, existingArea] = getSnapshotAtTimestamp(area.type, timeline, oldTimestamp);
-        const epsilon = 1e-3;
-        if (
-          Math.abs(currentSnapshot.x - existingArea.x) < epsilon &&
-          Math.abs(currentSnapshot.y - existingArea.y) < epsilon &&
-          Math.abs(currentSnapshot.width - existingArea.width) < epsilon &&
-          Math.abs(currentSnapshot.height - existingArea.height) < epsilon &&
-          Math.abs(currentSnapshot.rotation - existingArea.rotation) < epsilon
-        ) {
-          // too close, no need to update.
-        } else {
+        if (!isClose(area.type, currentSnapshot, existingArea)) {
           const timestampedArea = { timestamp: oldTimestamp, value: currentSnapshot };
           if (insertPos > 0 && Math.abs(timeline[insertPos - 1].timestamp - oldTimestamp) < 0.01) {
             timeline[insertPos - 1] = timestampedArea;
@@ -537,10 +528,14 @@ const Completion = types
           }
         }
 
-        const [areaPos, newArea] = getSnapshotAtTimestamp(area.type, timeline, timestamp);
-        const sx = area.width / area.relativeWidth;
-        const sy = area.height / area.relativeHeight;
-        area.setPosition(newArea.x * sx, newArea.y * sy, newArea.width * sx, newArea.height * sy, newArea.rotation);
+        const newArea = getSnapshotAtTimestamp(area.type, timeline, timestamp)[1];
+        const sx = area.x / area.relativeX;
+        const sy = area.y / area.relativeY;
+        if (area.type === "rectangleregion") {
+          area.setPosition(newArea.x * sx, newArea.y * sy, newArea.width * sx, newArea.height * sy, newArea.rotation);
+        } else if (area.type === "keypointregion") {
+          area.setPosition(newArea.x * sx, newArea.y * sy);
+        }
         area.timestamp = timestamp;
       });
     },

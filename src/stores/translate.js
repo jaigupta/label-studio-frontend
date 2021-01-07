@@ -35,8 +35,44 @@ export function getSnapshotAtTimestamp(type, timeline, timestamp) {
       value = {
         x: translate(startArea.x, endArea.x, frac),
         y: translate(startArea.y, endArea.y, frac),
+        width: translate(startArea.width, endArea.width, frac),
       };
+    } else if (type === "polygonregion") {
+      const points = [];
+      for (let i = 0; i < startArea.points.length; i++) {
+        const startPoint = startArea.points[i];
+        const endPoint = endArea.points[i];
+        points.push([translate(startPoint[0], endPoint[0], frac), translate(startPoint[1], endPoint[1], frac)]);
+      }
+      value = { points };
     }
     return [i, value];
   }
+}
+
+function getPoints(type, v) {
+  if (type === "rectangleregion") {
+    return [v.x, v.y, v.width, v.height, v.rotation];
+  } else if (type === "keypointregion") {
+    return [v.x, v.y, v.width];
+  } else if (type === "polygonregion") {
+    const points = [];
+    for (let i = 0; i < v.points.length; i++) {
+      points.push(v.points[i][0]);
+      points.push(v.points[i][1]);
+    }
+    return points;
+  }
+}
+
+export function isClose(type, v1, v2) {
+  const epsilon = 1e-3;
+  let p1 = getPoints(type, v1),
+    p2 = getPoints(type, v2);
+  for (let i = 0; i < p1.length; i++) {
+    if (Math.abs(p1[i] - p2[i]) > epsilon) {
+      return false;
+    }
+  }
+  return true;
 }
