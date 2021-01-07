@@ -48,8 +48,8 @@ import { TimeSeries } from "../examples/timeseries"; // eslint-disable-line no-u
  * Custom Data
  */
 // import { AllTypes } from "../examples/all_types"; // eslint-disable-line no-unused-vars
-
-// const data = VideoBbox;
+//
+// const data = ImageBbox;
 const data = VideoBbox;
 
 /**
