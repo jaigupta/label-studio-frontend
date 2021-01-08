@@ -7,13 +7,14 @@ import Hint from "../../../components/Hint/Hint";
 
 const VideoControls = ({ item, store }) => {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", marginTop: "1em" }}>
+    <div style={{ display: "flex", justifyContent: "space-between" }}>
       <span style={{ flex: 1 }} />
       <Button
-        type="primary"
+        type="text"
         onClick={ev => {
           item.slideInTime(-1.0);
         }}
+        shape="circle"
       >
         <Fragment>
           <DoubleLeftOutlined />
@@ -21,10 +22,11 @@ const VideoControls = ({ item, store }) => {
         </Fragment>
       </Button>
       <Button
-        type="primary"
+        type="text"
         onClick={ev => {
           item.slideInTime(-0.1);
         }}
+        shape="circle"
       >
         <Fragment>
           <LeftOutlined />
@@ -32,10 +34,11 @@ const VideoControls = ({ item, store }) => {
         </Fragment>
       </Button>
       <Button
-        type="primary"
+        type="text"
         onClick={ev => {
           item.slideInTime(0.1);
         }}
+        shape="circle"
       >
         <Fragment>
           <RightOutlined />
@@ -43,10 +46,11 @@ const VideoControls = ({ item, store }) => {
         </Fragment>
       </Button>
       <Button
-        type="primary"
+        type="text"
         onClick={ev => {
           item.slideInTime(1.0);
         }}
+        shape="circle"
       >
         <Fragment>
           <DoubleRightOutlined />

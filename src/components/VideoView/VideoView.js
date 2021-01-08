@@ -236,8 +236,7 @@ export default observer(
     componentDidMount() {
       window.addEventListener("resize", this.onResize);
 
-      const el = ReactDOM.findDOMNode(this);
-      this.$vid = el.querySelector("#video-" + this.props.item.name);
+      this.$vid = document.getElementById("video-" + this.props.item.name);
       observe(this.props.item, "currentTimestamp", change => {
         this.$vid.currentTime = change.newValue.storedValue;
         this.props.store.completionStore.selected.timeUpdated(this, this.props.item.currentTimestamp);
@@ -325,6 +324,7 @@ export default observer(
         <ObjectTag
           item={item}
           style={{
+            width: "100%",
             position: "relative",
             display: "flex",
             alignItems: "flex-start",

@@ -629,10 +629,21 @@ const Completion = types
 
         objCompletion.forEach(obj => {
           if (obj["type"] !== "relation") {
-            const { id, value, type, ...data } = obj;
+            let { id, value, type, ...data } = obj;
             // avoid duplicates of the same areas in different completions/predictions
             const areaId = `${id || guidGenerator()}#${self.id}`;
             const resultId = `${data.from_name}@${areaId}`;
+            const timeline = value.timeline;
+
+            if (timeline) {
+              const timestamp = document.getElementById("video-" + obj.to_name)?.currentTimestamp || 0;
+              const snapshot = getSnapshotAtTimestamp(type, timeline, timestamp)[1];
+              value = { ...value, ...snapshot };
+              self.areaTimelines.put({
+                id: areaId,
+                timeline,
+              });
+            }
 
             let area = self.areas.get(areaId);
             if (!area) {

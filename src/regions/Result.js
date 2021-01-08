@@ -190,7 +190,15 @@ const Result = types
       const { from_name, to_name, type, score, value } = getSnapshot(self);
       const { valueType } = self.from_name;
       const areaTimeline = self.completion.areaTimelines.get(self.area.id);
-      const data = areaTimeline ? areaTimeline.timeline : self.area ? self.area.serialize() : {};
+      const data = areaTimeline
+        ? {
+            value: {
+              timeline: areaTimeline.toJSON().timeline,
+            },
+          }
+        : self.area
+        ? self.area.serialize()
+        : {};
       if (!data) return null;
       if (!self.isSubmitable) return null;
       // cut off completion id
