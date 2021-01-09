@@ -288,8 +288,8 @@ export default observer(
       const imgTransform = [];
 
       if (getRoot(item).settings.fullscreen === false) {
-        containerStyle["maxWidth"] = item.maxwidth;
-        containerStyle["width"] = "100%";
+        containerStyle["maxWidth"] = item.maxWidth;
+        containerStyle["maxHeight"] = item.maxHeight;
       }
 
       if (item.zoomScale !== 1) {
