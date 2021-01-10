@@ -909,7 +909,8 @@ export default types
     function addCompletionFromPrediction(prediction) {
       // immutable work, because we'll change ids soon
       const s = prediction._initialCompletionObj.map(r => ({ ...r }));
-      const c = self.addCompletion({ userGenerate: true, result: s });
+      const c =
+        self.completions?.length > 0 ? self.completions[0] : self.addCompletion({ userGenerate: true, result: s });
 
       const ids = {};
 
