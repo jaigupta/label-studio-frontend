@@ -57,6 +57,16 @@ const Model = types
       if (self.points.length > 2) self.closed = true;
     },
 
+    movePoints(points) {
+      for (let i = 0; i < self.points.length; i++) {
+        self.points[i] = {
+          ...self.points[i],
+          x: points[i][0],
+          y: points[i][1],
+        };
+      }
+    },
+
     /**
      * @todo excess method; better to handle click only on start point
      * Handler for mouse on start point of Polygon

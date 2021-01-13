@@ -4,7 +4,11 @@ export function translate(start, end, frac) {
 
 export function getSnapshotAtTimestamp(type, timeline, timestamp) {
   if (!timeline || timeline.length === 0) {
-    return;
+    return [0, null];
+  }
+
+  if (timeline.length == 1 && timeline[0].value == null) {
+    return [0, null];
   }
 
   if (timestamp <= timeline[0].timestamp) {

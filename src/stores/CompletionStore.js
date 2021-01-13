@@ -517,7 +517,7 @@ const Completion = types
         const timeline = areaTimeline.timeline;
         const oldTimestamp = area.timestamp;
         const [insertPos, existingArea] = getSnapshotAtTimestamp(area.type, timeline, oldTimestamp);
-        if (!isClose(area.type, currentSnapshot, existingArea)) {
+        if (existingArea == null || !isClose(area.type, currentSnapshot, existingArea)) {
           const timestampedArea = { timestamp: oldTimestamp, value: currentSnapshot };
           if (insertPos > 0 && Math.abs(timeline[insertPos - 1].timestamp - oldTimestamp) < 0.01) {
             timeline[insertPos - 1] = timestampedArea;
@@ -529,12 +529,14 @@ const Completion = types
         }
 
         const newArea = getSnapshotAtTimestamp(area.type, timeline, timestamp)[1];
-        const sx = area.x / area.relativeX;
-        const sy = area.y / area.relativeY;
+        const sx = area.object.initialWidth / 100;
+        const sy = area.object.initialHeight / 100;
         if (area.type === "rectangleregion") {
           area.setPosition(newArea.x * sx, newArea.y * sy, newArea.width * sx, newArea.height * sy, newArea.rotation);
         } else if (area.type === "keypointregion") {
           area.setPosition(newArea.x * sx, newArea.y * sy);
+        } else {
+          area.movePoints(newArea.points.map(([x, y]) => [x * sx, y * sy]));
         }
         area.timestamp = timestamp;
       });
@@ -561,13 +563,15 @@ const Completion = types
         results: [result],
       });
 
+      // For incomplete annotations (e.g., polygon with <3 points, this can be null)
+      const areaSerialized = area.serialize();
       if (object.requiresTimeAxis) {
         const areaTimeline = {
           id: areaId,
           timeline: [
             {
               timestamp: object.currentTimestamp,
-              value: { ...area.serialize().value },
+              value: areaSerialized && areaSerialized.value,
             },
           ],
         };
