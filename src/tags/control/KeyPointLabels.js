@@ -35,7 +35,7 @@ const TagAttrs = types.model({
 });
 
 const Validation = types.model({
-  controlledTags: Types.unionTag(["Image"]),
+  controlledTags: Types.unionTag(["Image", "Video"]),
 });
 
 const ModelAttrs = types

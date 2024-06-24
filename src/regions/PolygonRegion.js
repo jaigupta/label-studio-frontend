@@ -15,13 +15,15 @@ import { PolygonPoint, PolygonPointView } from "./PolygonPoint";
 import { green } from "@ant-design/colors";
 import { guidGenerator } from "../core/Helpers";
 import { AreaMixin } from "../mixins/AreaMixin";
+import { VideoModel } from "../tags/object";
 
 const Model = types
   .model({
     id: types.optional(types.identifier, guidGenerator),
     pid: types.optional(types.string, guidGenerator),
     type: "polygonregion",
-    object: types.late(() => types.reference(ImageModel)),
+    object: types.late(() => types.reference(types.union(ImageModel, VideoModel))),
+    // object: types.late(() => types.reference(ImageModel)),
 
     points: types.array(types.union(PolygonPoint, types.array(types.number)), []),
 
@@ -53,6 +55,16 @@ const Model = types
       }
 
       if (self.points.length > 2) self.closed = true;
+    },
+
+    movePoints(points) {
+      for (let i = 0; i < self.points.length; i++) {
+        self.points[i] = {
+          ...self.points[i],
+          x: points[i][0],
+          y: points[i][1],
+        };
+      }
     },
 
     /**
@@ -508,5 +520,6 @@ const HtxPolygon = observer(HtxPolygonView);
 
 Registry.addTag("polygonregion", PolygonRegionModel, HtxPolygon);
 Registry.addRegionType(PolygonRegionModel, "image", value => !!value.points);
+Registry.addRegionType(PolygonRegionModel, "video", value => !!value.points);
 
 export { PolygonRegionModel, HtxPolygon };

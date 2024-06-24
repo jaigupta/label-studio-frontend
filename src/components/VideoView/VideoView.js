@@ -1,17 +1,20 @@
 import React, { Component } from "react";
+import ReactDOM from "react-dom";
 import { Stage, Layer, Group, Line } from "react-konva";
 import { observer } from "mobx-react";
 import { getRoot, isAlive } from "mobx-state-tree";
 
 import ImageGrid from "../ImageGrid/ImageGrid";
 import ImageTransformer from "../ImageTransformer/ImageTransformer";
-import ObjectTag from "../../components/Tags/Object";
+import ObjectTag from "../Tags/Object";
 import Tree from "../../core/Tree";
-import styles from "./ImageView.module.scss";
+import styles from "./VideoView.module.scss";
 import InfoModal from "../Infomodal/Infomodal";
+import VideoControls from "../../tags/object/Video/Controls";
+import { observe } from "mobx";
 
 export default observer(
-  class ImageView extends Component {
+  class VideoView extends Component {
     // stored position of canvas before creating region
     canvasX;
     canvasY;
@@ -232,6 +235,12 @@ export default observer(
 
     componentDidMount() {
       window.addEventListener("resize", this.onResize);
+
+      this.$vid = document.getElementById("video-" + this.props.item.name);
+      observe(this.props.item, "currentTimestamp", change => {
+        this.$vid.currentTime = change.newValue.storedValue;
+        this.props.store.completionStore.selected.timeUpdated(this, this.props.item.currentTimestamp);
+      });
     }
 
     componentWillUnmount() {
@@ -311,11 +320,11 @@ export default observer(
       if (imgTransform.length) {
         imgStyle["transform"] = imgTransform.join(" ");
       }
-
       return (
         <ObjectTag
           item={item}
           style={{
+            width: "100%",
             position: "relative",
             display: "flex",
             alignItems: "flex-start",
@@ -330,17 +339,19 @@ export default observer(
             style={containerStyle}
           >
             {filler}
-            <img
+            <video
+              id={"video-" + item.name}
               ref={ref => {
                 item.setImageRef(ref);
               }}
               style={imgStyle}
               src={item._value}
-              onLoad={item.updateImageSize}
+              onLoadedMetadata={item.onVideoLoaded}
               onError={this.handleError}
               onClick={this.handleOnClick}
               alt="LS"
             />
+            <VideoControls item={item} store={store} />
           </div>
           {/* @todo this is dirty hack; rewrite to proper async waiting for data to load */}
           {item.stageWidth <= 1 ? null : (

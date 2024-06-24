@@ -15,8 +15,10 @@ import { guidGenerator } from "../core/Helpers";
 import { DataValidator, ValidationError, VALIDATORS } from "../core/DataValidator";
 import { errorBuilder } from "../core/DataValidator/ConfigValidator";
 import Area from "../regions/Area";
+import AreaTimeline from "../regions/AreaTimeline";
 import throttle from "lodash.throttle";
 import { ViewModel } from "../tags/visual";
+import { getSnapshotAtTimestamp, isClose } from "./translate";
 
 const Completion = types
   .model("Completion", {
@@ -62,6 +64,7 @@ const Completion = types
     }),
 
     areas: types.map(Area),
+    areaTimelines: types.map(AreaTimeline),
 
     regionStore: types.optional(RegionStore, {
       regions: [],
@@ -507,6 +510,38 @@ const Completion = types
       Hotkey.setScope("__main__");
     },
 
+    timeUpdated(item, timestamp) {
+      self.areas.forEach((area, id) => {
+        const currentSnapshot = area.serialize().value;
+        const areaTimeline = self.areaTimelines.get(id);
+        const timeline = areaTimeline.timeline;
+        const oldTimestamp = area.timestamp;
+        const [insertPos, existingArea] = getSnapshotAtTimestamp(area.type, timeline, oldTimestamp);
+        if (existingArea == null || !isClose(area.type, currentSnapshot, existingArea)) {
+          const timestampedArea = { timestamp: oldTimestamp, value: currentSnapshot };
+          if (insertPos > 0 && Math.abs(timeline[insertPos - 1].timestamp - oldTimestamp) < 0.01) {
+            timeline[insertPos - 1] = timestampedArea;
+          } else if (insertPos < timeline.length && Math.abs(timeline[insertPos].timestamp - oldTimestamp) < 0.01) {
+            timeline[insertPos] = timestampedArea;
+          } else {
+            timeline.splice(insertPos, 0, timestampedArea);
+          }
+        }
+
+        const newArea = getSnapshotAtTimestamp(area.type, timeline, timestamp)[1];
+        const sx = area.object.initialWidth / 100;
+        const sy = area.object.initialHeight / 100;
+        if (area.type === "rectangleregion") {
+          area.setPosition(newArea.x * sx, newArea.y * sy, newArea.width * sx, newArea.height * sy, newArea.rotation);
+        } else if (area.type === "keypointregion") {
+          area.setPosition(newArea.x * sx, newArea.y * sy);
+        } else {
+          area.movePoints(newArea.points.map(([x, y]) => [x * sx, y * sy]));
+        }
+        area.timestamp = timestamp;
+      });
+    },
+
     createResult(areaValue, resultValue, control, object) {
       const result = {
         from_name: control.name,
@@ -516,8 +551,10 @@ const Completion = types
         value: resultValue,
       };
 
+      const areaId = guidGenerator();
       const area = self.areas.put({
-        id: guidGenerator(),
+        id: areaId,
+        timestamp: object.currentTimestamp,
         object,
         // data for Model instance
         ...areaValue,
@@ -525,6 +562,26 @@ const Completion = types
         value: areaValue,
         results: [result],
       });
+
+      // For incomplete annotations (e.g., polygon with <3 points, this can be null)
+      const areaSerialized = area.serialize();
+      if (object.requiresTimeAxis) {
+        const areaTimeline = {
+          id: areaId,
+          timeline: [
+            {
+              timestamp: object.currentTimestamp,
+              value: areaSerialized && areaSerialized.value,
+            },
+          ],
+        };
+        self.areaTimelines.put(areaTimeline);
+      }
+
+      // if (object.requiresTimeAxis)  {
+      // result.values = [resultValue];
+      // area.values = [areaValue];
+      // }
 
       if (!area.classification) getEnv(self).onEntityCreate(area);
 
@@ -576,10 +633,21 @@ const Completion = types
 
         objCompletion.forEach(obj => {
           if (obj["type"] !== "relation") {
-            const { id, value, type, ...data } = obj;
+            let { id, value, type, ...data } = obj;
             // avoid duplicates of the same areas in different completions/predictions
             const areaId = `${id || guidGenerator()}#${self.id}`;
             const resultId = `${data.from_name}@${areaId}`;
+            const timeline = value.timeline;
+
+            if (timeline) {
+              const timestamp = document.getElementById("video-" + obj.to_name)?.currentTimestamp || 0;
+              const snapshot = getSnapshotAtTimestamp(type, timeline, timestamp)[1];
+              value = { ...value, ...snapshot };
+              self.areaTimelines.put({
+                id: areaId,
+                timeline,
+              });
+            }
 
             let area = self.areas.get(areaId);
             if (!area) {
@@ -845,7 +913,8 @@ export default types
     function addCompletionFromPrediction(prediction) {
       // immutable work, because we'll change ids soon
       const s = prediction._initialCompletionObj.map(r => ({ ...r }));
-      const c = self.addCompletion({ userGenerate: true, result: s });
+      const c =
+        self.completions?.length > 0 ? self.completions[0] : self.addCompletion({ userGenerate: true, result: s });
 
       const ids = {};
 

@@ -2,7 +2,7 @@ import { types, getType, getRoot } from "mobx-state-tree";
 import { inject } from "mobx-react";
 
 import * as Tools from "../../tools";
-import ImageView from "../../components/ImageView/ImageView";
+import VideoView from "../../components/VideoView/VideoView";
 import ObjectBase from "./Base";
 import ProcessAttrsMixin from "../../mixins/ProcessAttrs";
 import Registry from "../../core/Registry";
@@ -26,7 +26,7 @@ import { customTypes } from "../../core/CustomTypes";
  * <View>
  *   <Image value="https://imgflip.com/s/meme/Leonardo-Dicaprio-Cheers.jpg" width="100%" maxWidth="750px" />
  * </View>
- * @name Image
+ * @name Video
  * @param {string} name                       - name of the element
  * @param {string} value                      - value
  * @param {string=} [width=100%]              - image width
@@ -47,7 +47,7 @@ const TagAttrs = types.model({
   value: types.maybeNull(types.string),
   resize: types.maybeNull(types.number),
   width: types.optional(types.string, "100%"),
-  maxWidth: types.optional(types.string, "4096px"),
+  maxWidth: types.optional(types.string, "1536px"),
   maxHeight: types.optional(types.string, "4096px"),
 
   // rulers: types.optional(types.boolean, true),
@@ -83,8 +83,12 @@ const IMAGE_CONSTANTS = {
 
 const Model = types
   .model({
-    type: "image",
+    type: "video",
     _value: types.optional(types.string, ""),
+
+    currentTimestamp: types.optional(types.number, 0),
+    duration: types.optional(types.number, 0),
+    requiresTimeAxis: types.optional(types.boolean, true),
 
     // tools: types.array(BaseTool),
 
@@ -354,20 +358,38 @@ const Model = types
       });
     },
 
+    onVideoLoaded(ev) {
+      const video = ev.target;
+      self.duration = video.duration;
+      self.currentTimestamp = 0;
+      self.updateImageSize(ev);
+      console.log("onVideoLoadedCalled");
+    },
+
+    slideInTime(deltaInSecs) {
+      const timestamp = self.currentTimestamp + deltaInSecs;
+      self.currentTimestamp = Math.max(Math.min(timestamp, self.duration), 0);
+    },
+
     updateImageSize(ev) {
-      const { width, height, naturalWidth, naturalHeight } = ev.target;
-      self.initialWidth = width;
-      self.initialHeight = height;
+      let { clientWidth, clientHeight, videoWidth, videoHeight } = ev.target;
+      self.initialWidth = clientWidth;
+      self.initialHeight = clientHeight;
       if ((self.rotation + 360) % 180 === 90) {
         // swap sizes
         self._updateImageSize({
-          width: height,
-          height: width,
-          naturalWidth: naturalHeight,
-          naturalHeight: naturalWidth,
+          width: clientHeight,
+          height: clientWidth,
+          naturalWidth: videoHeight,
+          naturalHeight: videoWidth,
         });
       } else {
-        self._updateImageSize({ width, height, naturalWidth, naturalHeight });
+        self._updateImageSize({
+          width: clientWidth,
+          height: clientHeight,
+          naturalWidth: videoWidth,
+          naturalHeight: videoHeight,
+        });
       }
       // after regions' sizes adjustment we have to reset all saved history changes
       // mobx do some batch update here, so we have to reset it asynchronously
@@ -460,11 +482,11 @@ const Model = types
     },
   }));
 
-const ImageModel = types.compose("ImageModel", TagAttrs, Model, ProcessAttrsMixin, ObjectBase);
+const VideoModel = types.compose("VideoModel", TagAttrs, Model, ProcessAttrsMixin, ObjectBase);
 
-const HtxImage = inject("store")(ImageView);
+const HtxVideo = inject("store")(VideoView);
 
-Registry.addTag("image", ImageModel, HtxImage);
-Registry.addObjectType(ImageModel);
+Registry.addTag("video", VideoModel, HtxVideo);
+Registry.addObjectType(VideoModel);
 
-export { ImageModel, HtxImage };
+export { VideoModel, HtxVideo };
